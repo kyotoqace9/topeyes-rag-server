@@ -4,3 +4,6 @@ RAG API server for Topeyes.
 
 ## Run (dev)
 uvicorn rag_server.main:app --reload
+
+## Documentation
+- Project Charter and specs: ./docs/

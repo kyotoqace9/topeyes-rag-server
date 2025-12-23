@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RAG Decision UI</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", sans-serif; margin: 0; background: #f6f7f9; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 18px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .card { background: #fff; border-radius: 14px; padding: 14px; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+    .card h2 { margin: 0 0 10px; font-size: 16px; }
+    label { display: block; font-size: 12px; color: #555; margin: 10px 0 6px; }
+    input, textarea, select { width: 100%; box-sizing: border-box; border: 1px solid #d7dbe2; border-radius: 10px; padding: 10px; font-size: 14px; background: #fff; }
+    textarea { min-height: 90px; resize: vertical; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btns { display:flex; gap:10px; flex-wrap: wrap; margin-top: 12px; }
+    button { border: 0; border-radius: 12px; padding: 10px 12px; font-size: 14px; cursor: pointer; box-shadow: 0 1px 6px rgba(0,0,0,.08); }
+    button.primary { background: #111827; color: #fff; }
+    button.ghost { background: #eef2ff; color: #111827; }
+    button.warn { background: #fef3c7; }
+    .status { display:flex; align-items:center; gap:10px; margin-bottom: 10px; }
+    .badge { padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; display:inline-block; }
+    .badge.red { background: #fee2e2; color: #991b1b; }
+    .badge.purple { background: #ede9fe; color: #5b21b6; }
+    .badge.yellow { background: #fef3c7; color: #92400e; }
+    .badge.green { background: #dcfce7; color: #166534; }
+    pre { white-space: pre-wrap; word-break: break-word; background: #0b1020; color: #e5e7eb; padding: 12px; border-radius: 12px; overflow:auto; }
+    .mini { font-size: 12px; color: #6b7280; }
+    .list { margin: 0; padding-left: 18px; }
+    .kvs { display:grid; grid-template-columns: 160px 1fr; gap:8px; font-size: 13px; }
+    .k { color:#6b7280; }
+    .v { font-weight:600; }
+    .copyline { display:flex; justify-content: space-between; align-items:center; gap:10px; }
+    .copyline button { padding: 8px 10px; }
+    .full { grid-column: 1 / -1; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="copyline">
+        <h1 style="margin:0;font-size:18px;">RAG 解約判断 UI（Web）</h1>
+        <div class="mini">API: <span id="apiLabel"></span></div>
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label>API Base（例: http://localhost:8000）</label>
+          <input id="apiBase" value="http://192.168.1.200:8000" />
+        </div>
+        <div>
+          <label>course_id</label>
+          <input id="courseId" value="DP_7P_001" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>top_k</label>
+          <input id="topK" type="number" min="1" max="20" value="5" />
+        </div>
+        <div>
+          <label>category（任意）</label>
+          <input id="category" placeholder="例: 縛り・解約金 / 解約期限 / 返品・返金原則" />
+        </div>
+      </div>
+      <label>問い合わせ（query）</label>
+      <textarea id="query">7回受け取りお約束コースで初回だけ受け取って解約したい。解約金は必要？</textarea>
+
+      <label>状況（context）</label>
+      <textarea id="context">受注回数=初回のみ。次回発送予定日=2025-12-25。</textarea>
+
+      <div class="btns">
+        <button class="primary" id="runBtn">判断する（/answer_decision）</button>
+        <button class="ghost" id="searchBtn">検索だけ（/search）</button>
+        <button class="ghost" id="copyJsonBtn" disabled>JSONをコピー</button>
+        <button class="warn" id="copyEscalate" disabled>上長確認テンプレをコピー</button>
+        <button class="primary" id="confirmBtn" disabled>確認して確定（チェック）</button>
+      </div>
+      <div id="err" class="mini" style="margin-top:8px;color:#b91c1c;"></div>
+    </div>
+
+    <div class="grid" style="margin-top:12px;">
+      <div class="card">
+        <h2>ステータス</h2>
+　　　　<div id="alerts" style="margin-top:10px; display:grid; gap:8px;"></div>
+        <div class="status">
+          <span id="badge" class="badge yellow">未実行</span>
+          <div class="mini" id="statusText">—</div>
+        </div>
+        <div class="kvs">
+          <div class="k">decision_code</div><div class="v" id="dc">—</div>
+          <div class="k">can_cancel</div><div class="v" id="cc">—</div>
+          <div class="k">fee_status</div><div class="v" id="fs">—</div>
+          <div class="k">exception_available</div><div class="v" id="ex">—</div>
+          <div class="k">deadline_known</div><div class="v" id="dl">—</div>
+          <div class="k">needs_confirmation</div><div class="v" id="nc">—</div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>オペ手順（operator_steps）</h2>
+        <ul id="steps" class="list"><li>—</li></ul>
+      </div>
+      <div class="card">
+        <div class="copyline">
+          <h2>顧客案内（customer_message）</h2>
+          <button class="warn" id="copyCustomer" disabled>コピー</button>
+        </div>
+        <pre id="customer">—</pre>
+      </div>
+      <div class="card">
+        <div class="copyline">
+          <h2>社内メモ（operator_note）</h2>
+          <button class="warn" id="copyNote" disabled>コピー</button>
+        </div>
+        <pre id="note">—</pre>
+      </div>
+
+      <div class="card full">
+        <h2>生JSON</h2>
+        <pre id="raw">—</pre>
+      </div>
+
+      <div class="card full">
+        <h2>検索ヒット（/search）</h2>
+        <pre id="searchRaw">—</pre>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  function pickBadge(summary){
+    // 優先度：赤 > 紫 > 黄 > 緑
+    if(!summary) return {cls:"yellow", text:"未実行"};
+    if(summary.can_cancel === false) return {cls:"red", text:"NG（不可）"};
+    if(summary.exception_available === true) return {cls:"purple", text:"例外あり（上長確認）"};
+    if(summary.fee_status === "REQUIRED" || summary.fee_status === "UNKNOWN" || summary.needs_confirmation === true) {
+      return {cls:"yellow", text:"注意（確認あり）"};
+    }
+    return {cls:"green", text:"OK"};
+  }
+
+  async function postJson(url, body){
+    const r = await fetch(url, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(body)
+    });
+    const text = await r.text();
+    let data;
+    try { data = JSON.parse(text); } catch(e) { data = {raw:text}; }
+    if(!r.ok){
+      const detail = (data && data.detail) ? data.detail : text;
+      throw new Error(`HTTP ${r.status}: ${detail}`);
+    }
+    return data;
+  }
+
+  function setEnabled(id, on){ $(id).disabled = !on; }
+
+function toast(msg){
+  const t = document.createElement("div");
+  t.textContent = msg;
+  t.style.position = "fixed";
+  t.style.right = "16px";
+  t.style.bottom = "16px";
+  t.style.background = "#111827";
+  t.style.color = "white";
+  t.style.padding = "10px 12px";
+  t.style.borderRadius = "12px";
+  t.style.boxShadow = "0 6px 24px rgba(0,0,0,.18)";
+  t.style.zIndex = 9999;
+  document.body.appendChild(t);
+  setTimeout(()=> t.remove(), 1400);
+}
+
+function renderAlerts(summary){
+  const el = $("alerts");
+  el.innerHTML = "";
+  if(!summary) return;
+
+  const items = [];
+
+  if(summary.needs_confirmation){
+    items.push({title:"要確認", body:"金額・条件など未確定の項目があります。マスター/資料を確認してから確定してください。"});
+  }
+  if(summary.fee_status === "UNKNOWN" || summary.fee_status === "REQUIRED"){
+    items.push({title:"解約金", body:`解約金の案内が必要です（状態: ${summary.fee_status}）。金額は別途確認として案内してください。`});
+  }
+  if(summary.exception_available){
+    items.push({title:"例外運用", body:"最終特例の可能性あり。上長確認/運用ルールに従って判断してください。"});
+  }
+  if(summary.deadline_known){
+    items.push({title:"期限", body:"解約受付期限が存在します。次回発送予定日基準で締切に該当するか確認してください。"});
+  }
+
+  for(const it of items){
+    const c = document.createElement("div");
+    c.style.border = "1px solid #e5e7eb";
+    c.style.borderRadius = "12px";
+    c.style.padding = "10px";
+    c.style.background = "#f9fafb";
+    c.innerHTML = `<div style="font-weight:700; margin-bottom:4px;">${it.title}</div><div class="mini">${it.body}</div>`;
+    el.appendChild(c);
+  }
+}
+
+async function runDecision(){
+  $("err").textContent = "";
+  const base = $("apiBase").value.trim().replace(/\/$/,"");
+  $("apiLabel").textContent = base;
+
+  const body = {
+    query: $("query").value,
+    top_k: Number($("topK").value || 5),
+    course_id: $("courseId").value || null,
+    category: $("category").value || null,
+    context: $("context").value || null,
+  };
+
+  try{
+    const data = await postJson(`${base}/answer_decision`, body);
+
+    $("raw").textContent = JSON.stringify(data, null, 2);
+    setEnabled("copyJsonBtn", true);
+    setEnabled("copyCustomer", true);
+    setEnabled("copyNote", true);
+
+    const summary = data.decision_summary || null;
+    renderAlerts(summary);
+
+    const badge = pickBadge(summary);
+    $("badge").className = `badge ${badge.cls}`;
+    $("badge").textContent = badge.text;
+
+    $("statusText").textContent = data.decision || "—";
+
+    $("dc").textContent = data.decision_code ?? "—";
+    $("cc").textContent = summary ? String(summary.can_cancel) : "—";
+    $("fs").textContent = summary ? (summary.fee_status ?? "—") : "—";
+    $("ex").textContent = summary ? String(summary.exception_available) : "—";
+    $("dl").textContent = summary ? String(summary.deadline_known) : "—";
+    $("nc").textContent = summary ? String(summary.needs_confirmation) : "—";
+
+    $("customer").textContent = data.customer_message || "—";
+    $("note").textContent = data.operator_note || "—";
+
+    const steps = $("steps");
+    steps.innerHTML = "";
+    (data.operator_steps || []).forEach(s => {
+      const li = document.createElement("li");
+      li.textContent = s;
+      steps.appendChild(li);
+    });
+    if((data.operator_steps || []).length === 0){
+      const li = document.createElement("li");
+      li.textContent = "—";
+      steps.appendChild(li);
+    }
+
+    // 上長確認テンプレ（行頭の余白が混ざらない書き方）
+    const escalateText =
+`【上長確認依頼】
+受付内容：${body.query}
+状況：${body.context || "（なし）"}
+判断コード：${data.decision_code}
+判断要旨：${data.decision}
+
+要確認：${(data.needs_confirmation||[]).join(" / ") || "（なし）"}
+根拠know_id：${(data.used_know_ids||[]).join(", ") || "（なし）"}
+
+※例外運用の可否についてご判断お願いします。`;
+
+    $("copyEscalate").dataset.text = escalateText;
+
+    // ボタン制御（dataset.textセット後に）
+    setEnabled("confirmBtn", !!summary);
+    setEnabled("copyEscalate", !!summary && summary.exception_available === true);
+
+  } catch(e){
+    $("err").textContent = e.message;
+  }
+}
+
+  async function runSearch(){
+    $("err").textContent = "";
+    const base = $("apiBase").value.trim().replace(/\/$/,"");
+    $("apiLabel").textContent = base;
+
+    const body = {
+      query: $("query").value,
+      top_k: Number($("topK").value || 5),
+      course_id: $("courseId").value || null,
+      category: $("category").value || null
+    };
+
+    try{
+      const data = await postJson(`${base}/search`, body);
+      $("searchRaw").textContent = JSON.stringify(data, null, 2);
+    } catch(e){
+      $("err").textContent = e.message;
+    }
+  }
+
+  async function copyText(text){
+    await navigator.clipboard.writeText(text);
+  }
+
+  $("runBtn").addEventListener("click", runDecision);
+  $("searchBtn").addEventListener("click", runSearch);
+
+  $("copyJsonBtn").addEventListener("click", async () => {
+    await copyText($("raw").textContent);
+    toast("JSONをコピーしました");
+  });
+  $("copyCustomer").addEventListener("click", async () => {
+    await copyText($("customer").textContent);
+    toast("顧客案内をコピーしました");
+  });
+  $("copyNote").addEventListener("click", async () => {
+    await copyText($("note").textContent);
+    toast("社内メモをコピーしました");
+  });
+  $("copyEscalate").addEventListener("click", async () => {
+    await copyText($("copyEscalate").dataset.text || "");
+    toast("上長確認テンプレをコピーしました");
+  });
+
+  $("confirmBtn").addEventListener("click", async () => {
+    toast("確認して確定：チェックしました（※現状はUI側の印です）");
+  });
+
+  $("apiLabel").textContent = $("apiBase").value;
+</script>
+</body>
+</html>
