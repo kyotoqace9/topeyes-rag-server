@@ -41,11 +41,13 @@
 ### Request
 なし
 
-### Response
+### Response（例）
 
 {
   "status": "ok"
 }
+
+---
 
 ## 4. /search（ナレッジ検索）
 
@@ -97,6 +99,8 @@
     }
   ]
 }
+
+---
 
 ## 5. /answer_decision（判断支援）
 
@@ -213,6 +217,8 @@
   ]
 }
 
+---
+
 ## 6. warnings 種別一覧
 
 | type                        | 説明              |
@@ -223,8 +229,12 @@
 | version_ambiguity           | 適用期間が曖昧         |
 | sv_confirmation_recommended | SV確認推奨          |
 
+---
+
 ## 7. 将来拡張
 
 - strong_cancel_intent の自動判定支援
 - status=approved のみを返すモード
 - course_alias / tags を使った検索精度改善
+
+---
