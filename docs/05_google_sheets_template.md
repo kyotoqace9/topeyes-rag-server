@@ -18,45 +18,50 @@ Google Sheetsで登録・改定・承認できるようにするためのテン�
 
 ## 2. knowledge_units 列定義（この順で作成推奨）
 
+- 英名（snake_case）は機械処理の正とする
+- Google Sheetsのヘッダは「英名（和名）」で併記してよい
+- エクスポート/連携時は「（」より前の英名をキーとして扱う
+
 ### A. 識別・対象
 | 列 | カラム名 | 必須 | 型/例 | 説明 |
 |---|---|---|---|---|
-| A | know_id | ○ | `KU-02-001` / UUID | 一意ID（変更しても固定） |
-| B | client_company_id | ○ | `KN` / `URBAN` 等 | クライアント識別 |
-| C | product_name | ○ | `漲天` | 商材名 |
-| D | course_name | ○ | `7回お約束コースLN` | 正式コース名 |
-| E | course_alias | | `7回受け取りお約束コース` | 旧称/別名（検索用） |
+| A | know_id（ナレッジID） | ○ | `KU-02-001` / UUID | 一意ID（変更しても固定） |
+| B | client_company_id（クライアントID） | ○ | `KN` / `URBAN` 等 | クライアント識別 |
+| C | product_name（商材名） | ○ | `漲天` | 商材名 |
+| D | course_name（コース名） | ○ | `7回お約束コースLN` | 正式コース名 |
+| E | course_alias（コース別名／旧称） |  | `7回受け取りお約束コース` | 旧称・別名（検索用） |
 
 ### B. 分類・状態
 | 列 | カラム名 | 必須 | 型/例 | 説明 |
 |---|---|---|---|---|
-| F | rule_type | ○ | `RULE` | RULE/EXCEPTION/PROCEDURE/RELIABILITY |
-| G | status | ○ | `draft` | draft/approved/deprecated |
-| H | priority | | `P1` | P0/P1/P2（任意：重要度） |
+| F | rule_type（種別） | ○ | `RULE` | RULE / EXCEPTION / PROCEDURE / RELIABILITY |
+| G | status（状態） | ○ | `draft` | draft / approved / deprecated |
+| H | priority（重要度） |  | `P1` | P0 / P1 / P2（任意） |
 
 ### C. 版管理（versioning）
 | 列 | カラム名 | 必須 | 型/例 | 説明 |
 |---|---|---|---|---|
-| I | version | ○ | `v1` | 上書き禁止。改定時はv2,v3… |
-| J | effective_from | ○ | `2025-12-01` | 適用開始日（YYYY-MM-DD） |
-| K | effective_to | | `2026-03-31` | 適用終了日（なければ空） |
-| L | supersedes_know_id | | `KU-02-000` | 置換元KU（任意） |
+| I | version（版） | ○ | `v1` | 上書き禁止。改定時は v2, v3… |
+| J | effective_from（適用開始日） | ○ | `2025-12-01` | 適用開始日（YYYY-MM-DD） |
+| K | effective_to（適用終了日） |  | `2026-03-31` | 適用終了日（なければ空） |
+| L | supersedes_know_id（置換元ナレッジID） |  | `KU-02-000` | 置換元KU（任意） |
 
 ### D. 内容（検索と根拠）
 | 列 | カラム名 | 必須 | 型/例 | 説明 |
 |---|---|---|---|---|
-| M | summary | ○ | `縛り回数は発送済み（返品除外）で判定` | 1〜2行要約（検索ヒットの核） |
-| N | body | ○ | （長文OK） | 詳細本文（判断・根拠・手順） |
-| O | tags | | `解約,縛り,アップセル,返品除外` | カンマ区切り |
-| P | source_refs | ○ | 下の形式 | 根拠（複数可）。口頭は禁止 |
+| M | summary（要約） | ○ | `縛り回数は発送済み（返品除外）で判定` | 1〜2行要約（検索ヒットの核） |
+| N | body（本文） | ○ | （長文OK） | 詳細本文（判断・根拠・手順） |
+| O | tags（タグ） |  | `解約,縛り,アップセル,返品除外` | カンマ区切り |
+| P | source_refs（根拠） | ○ | 下の形式 | 根拠（複数可）。口頭は禁止 |
 
 ### E. 運用メタ
 | 列 | カラム名 | 必須 | 型/例 | 説明 |
 |---|---|---|---|---|
-| Q | owner | | `SV_山田` | 主担当（任意） |
-| R | reviewer | | `管理者_佐藤` | 承認者（approved時に記入） |
-| S | approved_at | | `2025-12-23` | 承認日 |
-| T | notes | | `事故防止：定期お約束回数は信用しない` | 補足 |
+| Q | owner（作成／管理者） |  | `SV_山田` | 主担当（任意） |
+| R | reviewer（承認者） |  | `管理者_佐藤` | 承認者（approved時に記入） |
+| S | approved_at（承認日） |  | `2025-12-23` | 承認日 |
+| T | notes（補足） |  | `事故防止：定期お約束回数は信用しない` | 補足 |
+
 
 ---
 

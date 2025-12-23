@@ -28,6 +28,8 @@ knowledge_units_master
 - 1行目：ヘッダ（固定）
 - 2行目以降：データ
 - 1行 = 1 Knowledge Unit（KU）
+- knowledge_units のヘッダ行は 英名（和名） で作る
+- code_master は和名不要でも良いが、必要なら同様に併記可能とする
 
 ### 列構成
 ※ 列定義は `05_google_sheets_template.md` に完全準拠  

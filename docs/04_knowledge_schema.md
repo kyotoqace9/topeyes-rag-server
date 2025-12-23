@@ -18,21 +18,26 @@
 
 ## 2. 必須カラム（MVP）
 
+- 英名（snake_case）は機械処理の正とする
+- Google Sheetsのヘッダは「英名（和名）」で併記してよい
+- エクスポート/連携時は「（」より前の英名をキーとして扱う
+
 | カラム名 | 必須 | 説明 |
 |--------|------|------|
-| know_id | ○ | ナレッジ一意ID（UUID等） |
-| client_company_id | ○ | クライアント識別 |
-| product_name | ○ | 商材名（例：漲天） |
-| course_name | ○ | コース名（例：7回お約束コースLN） |
-| rule_type | ○ | RULE / EXCEPTION / PROCEDURE / RELIABILITY |
-| version | ○ | v1, v2 ... |
-| effective_from | ○ | 適用開始日 |
-| effective_to | | 適用終了日（なければ空） |
-| summary | ○ | 検索用要約（1〜2行） |
-| body | ○ | 詳細ルール本文 |
-| source_refs | ○ | 根拠（スプシ/議事録/Chatwork等） |
-| tags | | 検索用タグ（カンマ区切り） |
-| status | ○ | draft / approved / deprecated |
+| know_id（ナレッジID） | ○ | ナレッジ一意ID（UUID等） |
+| client_company_id（クライアントID） | ○ | クライアント識別 |
+| product_name（商材名） | ○ | 商材名（例：漲天） |
+| course_name（コース名） | ○ | コース名（例：7回お約束コースLN） |
+| rule_type（種別） | ○ | RULE / EXCEPTION / PROCEDURE / RELIABILITY |
+| version（版） | ○ | v1, v2 ... |
+| effective_from（適用開始日） | ○ | 適用開始日 |
+| effective_to（適用終了日） |  | 適用終了日（なければ空） |
+| summary（要約） | ○ | 検索用要約（1〜2行） |
+| body（本文） | ○ | 詳細ルール本文 |
+| source_refs（根拠） | ○ | 根拠（スプシ/議事録/Chatwork等） |
+| tags（タグ） |  | 検索用タグ（カンマ区切り） |
+| status（状態） | ○ | draft / approved / deprecated |
+
 
 ---
 
