@@ -73,6 +73,18 @@ knowledge_units_master
 | P1 |
 | P2 |
 
+### code_master 初期データ（コピペ用）
+
+#### ヘッダ（1行目）
+code_type（コード種別） / code_value（値） / code_label（表示名/説明） / sort_order（並び順）
+
+#### 初期データ（2行目以降）
+- rule_type: RULE / EXCEPTION / PROCEDURE / RELIABILITY
+- status: draft / approved / deprecated
+- priority: P0 / P1 / P2（任意）
+
+（Google Sheetsにはタブ区切りで貼り付ける）
+
 ---
 
 ## 4. データ検証（必須設定）
